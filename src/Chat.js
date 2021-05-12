@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     ApolloClient,
     InMemoryCache,
@@ -10,7 +10,7 @@ import {
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { Container, Row, Col, FormInput, Button } from "shards-react";
 
-const wslink = new WebSocketLink({
+const link = new WebSocketLink({
     uri: `ws://localhost:4000/`,
     options: {
         reconnect: true,
@@ -18,7 +18,7 @@ const wslink = new WebSocketLink({
 });
 
 const client = new ApolloClient({
-    wslink,
+    link,
     uri: "http://localhost:4000/",
     cache: new InMemoryCache(),
 });
@@ -39,7 +39,6 @@ const POST_MESSAGE = gql`
     }
 `;
 
-
 const Messages = ({ user }) => {
     const { data } = useSubscription(GET_MESSAGES);
     if (!data) {
@@ -49,7 +48,7 @@ const Messages = ({ user }) => {
     return (
         <>
             {data.messages.map(({ id, user: messageUser, content }) => (
-                <div
+                <div key={id}
                     style={{
                         display: "flex",
                         justifyContent:
@@ -92,35 +91,34 @@ const Messages = ({ user }) => {
 };
 
 const Chat = () => {
-    const [state, setState] = useState({
+    const [message, setMessage] = useState({
         user: "Caia",
         content: "",
     });
     const [postMessage] = useMutation(POST_MESSAGE);
 
     const onSend = () => {
-        if (state.content.length > 0) {
+        if (message.content.length > 0) {
             postMessage({
-                variables: state,
+                variables: message,
             });
         }
-        setState({
-            ...state,
+        setMessage({
+            ...message,
             content: "",
         });
     };
-
     return (
-        <Container>
-            <Messages user={state.user} />
+        <Container style={{margin: "10vh"}}>
+            <Messages user={message.user} />
             <Row>
                 <Col xs={2} style={{ padding: 0 }}>
                     <FormInput
                         label="User"
-                        value={state.user}
+                        value={message.user}
                         onChange={(evt) =>
-                            stateSet({
-                                ...state,
+                            setMessage({
+                                ...message,
                                 user: evt.target.value,
                             })
                         }
@@ -129,10 +127,10 @@ const Chat = () => {
                 <Col xs={8}>
                     <FormInput
                         label="Content"
-                        value={state.content}
+                        value={message.content}
                         onChange={(evt) =>
-                            stateSet({
-                                ...state,
+                            setMessage({
+                                ...message,
                                 content: evt.target.value,
                             })
                         }
