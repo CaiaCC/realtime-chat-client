@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React from "react";
 import {
     ApolloClient,
     InMemoryCache,
     ApolloProvider,
-    useQuery,
-    gql,
+    useSubscription,
     useMutation,
+    gql,
 } from "@apollo/client";
+import { WebSocketLink } from "@apollo/client/link/ws";
 import { Container, Row, Col, FormInput, Button } from "shards-react";
 
+const wslink = new WebSocketLink({
+    uri: `ws://localhost:4000/`,
+    options: {
+        reconnect: true,
+    },
+});
+
 const client = new ApolloClient({
+    wslink,
     uri: "http://localhost:4000/",
     cache: new InMemoryCache(),
 });
 
 const GET_MESSAGES = gql`
-    query {
+    subscription {
         messages {
             id
             content
@@ -31,8 +40,8 @@ const POST_MESSAGE = gql`
 `;
 
 
-const Message = ({ user }) => {
-    const { data } = useQuery(GET_MESSAGES);
+const Messages = ({ user }) => {
+    const { data } = useSubscription(GET_MESSAGES);
     if (!data) {
         return null;
     }
@@ -80,16 +89,14 @@ const Message = ({ user }) => {
             ))}
         </>
     );
-}
+};
 
 const Chat = () => {
     const [state, setState] = useState({
         user: "Caia",
         content: "",
     });
-    const [postMessage] = useMutation(POST_MESSAGE, {
-        pollInterval: 500,
-    });
+    const [postMessage] = useMutation(POST_MESSAGE);
 
     const onSend = () => {
         if (state.content.length > 0) {
@@ -105,16 +112,16 @@ const Chat = () => {
 
     return (
         <Container>
-            <Message user={state.user} />
+            <Messages user={state.user} />
             <Row>
                 <Col xs={2} style={{ padding: 0 }}>
                     <FormInput
                         label="User"
                         value={state.user}
-                        onChange={(e) =>
-                            setState({
+                        onChange={(evt) =>
+                            stateSet({
                                 ...state,
-                                user: e.target.value,
+                                user: evt.target.value,
                             })
                         }
                     />
@@ -123,14 +130,14 @@ const Chat = () => {
                     <FormInput
                         label="Content"
                         value={state.content}
-                        onChange={(e) =>
-                            setState({
+                        onChange={(evt) =>
+                            stateSet({
                                 ...state,
-                                content: e.target.value,
+                                content: evt.target.value,
                             })
                         }
-                        onKeyUp={(e) => {
-                            if (e.keyCode === 13) {
+                        onKeyUp={(evt) => {
+                            if (evt.keyCode === 13) {
                                 onSend();
                             }
                         }}
@@ -150,4 +157,4 @@ export default () => (
     <ApolloProvider client={client}>
         <Chat />
     </ApolloProvider>
-)
+);
