@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     ApolloClient,
     InMemoryCache,
@@ -48,7 +48,7 @@ const Messages = ({ user }) => {
     return (
         <>
             {data.messages.map(({ id, user: messageUser, content }) => (
-                <div key={id}
+                <div
                     style={{
                         display: "flex",
                         justifyContent:
@@ -91,34 +91,34 @@ const Messages = ({ user }) => {
 };
 
 const Chat = () => {
-    const [message, setMessage] = useState({
+    const [state, stateSet] = React.useState({
         user: "Caia",
         content: "",
     });
     const [postMessage] = useMutation(POST_MESSAGE);
 
     const onSend = () => {
-        if (message.content.length > 0) {
+        if (state.content.length > 0) {
             postMessage({
-                variables: message,
+                variables: state,
             });
         }
-        setMessage({
-            ...message,
+        stateSet({
+            ...state,
             content: "",
         });
     };
     return (
-        <Container style={{margin: "10vh"}}>
-            <Messages user={message.user} />
+        <Container>
+            <Messages user={state.user} />
             <Row>
                 <Col xs={2} style={{ padding: 0 }}>
                     <FormInput
                         label="User"
-                        value={message.user}
+                        value={state.user}
                         onChange={(evt) =>
-                            setMessage({
-                                ...message,
+                            stateSet({
+                                ...state,
                                 user: evt.target.value,
                             })
                         }
@@ -127,10 +127,10 @@ const Chat = () => {
                 <Col xs={8}>
                     <FormInput
                         label="Content"
-                        value={message.content}
+                        value={state.content}
                         onChange={(evt) =>
-                            setMessage({
-                                ...message,
+                            stateSet({
+                                ...state,
                                 content: evt.target.value,
                             })
                         }
